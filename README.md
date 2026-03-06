@@ -76,7 +76,7 @@ data/amazon_mt_2023/meta_Movies_and_TV.jsonl.gz
 
 #### MIND (Microsoft News)
 
-Download [MIND-Large](https://msnews.github.io/) (`MINDlarge_train.zip` and `MINDlarge_dev.zip`) and extract:
+Download [MIND-Large](https://msnews.github.io/) (`MINDlarge_train.zip` and `MINDlarge_VALID.zip`) and extract:
 ```
 data/mind/train/behaviors.tsv
 data/mind/train/news.tsv
