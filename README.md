@@ -31,44 +31,78 @@ pip install torch "transformers==4.53.0" "deepspeed==0.17.1" omegaconf scikit-le
 
 ```
 Dont-Start-Over/
-├── train_sp.py                  # Stage 1: Train user soft prompts on a source LLM
-├── train_ad.py                  # Stage 2: Train adapter for cross-LLM prompt migration
-├── train_paad.py                # Stage 2 (variant): Parallel sources adapter training (In RQ4)
-├── build_dataset_amazon.ipynb   # Dataset preprocessing for Amazon Movies & TV
-├── build_dataset_mind.ipynb     # Dataset preprocessing for MIND
-├── build_dataset_yelp.ipynb     # Dataset preprocessing for Yelp
+├── train_sp.py                       # Stage 1: Train user soft prompts on a source LLM
+├── train_ad.py                       # Stage 2: Train adapter for cross-LLM prompt migration
+├── train_paad.py                     # Stage 2 (variant): Parallel-source adapter (RQ4)
 ├── configs/
-│   ├── llama3_1b_sp_amazon.yaml # Soft prompt config: LLaMA3 on Amazon
-│   ├── llama3_1b_sp_mind.yaml   # Soft prompt config: LLaMA3 on MIND
-│   ├── llama3_1b_sp_yelp.yaml   # Soft prompt config: LLaMA3 on Yelp
-│   ├── ad_llama3_amazon.yaml    # Adapter config: Amazon
-│   ├── ad_llama3_mind.yaml      # Adapter config: MIND
-│   └── ad_llama3_yelp.yaml      # Adapter config: Yelp
+│   ├── llama3_1b_sp_amazon.yaml      # Soft prompt config: Amazon
+│   ├── llama3_1b_sp_mind.yaml        # Soft prompt config: MIND
+│   ├── llama3_1b_sp_yelp.yaml        # Soft prompt config: Yelp
+│   ├── ad_llama3_amazon.yaml         # Adapter config: Amazon
+│   ├── ad_llama3_mind.yaml           # Adapter config: MIND
+│   └── ad_llama3_yelp.yaml           # Adapter config: Yelp
+├── build_dataset/
+│   ├── build_dataset_amazon.py       # Dataset preprocessing for Amazon Movies & TV
+│   ├── build_dataset_mind.py         # Dataset preprocessing for MIND
+│   └── build_dataset_yelp.py         # Dataset preprocessing for Yelp
 └── utils/
-    ├── datasets.py              # Dataset builders and loaders
-    ├── model.py                 # Model definitions (RecModelRP, AdapterModelRP, etc.)
-    ├── runner.py                # Training and evaluation runners
-    ├── metrics.py               # Evaluation metrics (RMSE, MAE, uAUC, HSIC)
-    ├── user_select.py           # User selection strategies for training
-    ├── log.py                   # Logging utilities
-    └── utils.py                 # DeepSpeed config helpers
+    ├── datasets.py                   # Dataset builders and loaders
+    ├── model.py                      # Model definitions (RecModelRP, AdapterModelRP, …)
+    ├── runner.py                     # Training and evaluation runners
+    ├── metrics.py                    # Evaluation metrics (RMSE, MAE, uAUC, HSIC)
+    ├── user_select.py                # User selection strategies for adapter training
+    ├── log.py                        # Logging utilities
+    └── utils.py                      # DeepSpeed configuration helpers
 ```
 
 ---
 
 ## Datasets
 
-Download the raw data and preprocess it using the provided Jupyter notebooks.
+### 1. Download Raw Data
 
-| Dataset | Task | Source |
-|---|---|---|
-| Amazon Movies & TV | Rating Prediction (1–5) | [Amazon Review Data 2023](https://amazon-reviews-2023.github.io/) |
-| MIND | Click Prediction (Yes/No) | [MIND Dataset](https://msnews.github.io/) |
-| Yelp | Rating Prediction (1–5) | [Yelp Dataset Challenge](https://www.yelp.com/dataset) |
+#### Amazon Movies & TV
 
-Place the raw data files and run the corresponding notebook to generate the processed `.csv` / `.tsv` / `.pickle` files under `datasets/<DatasetName>/`.
+Download from [Amazon Review Data 2023](https://amazon-reviews-2023.github.io/):
 
-Expected directory layout after preprocessing:
+- Interactions: `Movies_and_TV.jsonl.gz`
+- Metadata: `meta_Movies_and_TV.jsonl.gz`
+
+Place both files under `data/amazon_mt_2023/`:
+```
+data/amazon_mt_2023/Movies_and_TV.jsonl.gz
+data/amazon_mt_2023/meta_Movies_and_TV.jsonl.gz
+```
+
+#### MIND (Microsoft News)
+
+Download [MIND-Large](https://msnews.github.io/) (`MINDlarge_train.zip` and `MINDlarge_dev.zip`) and extract:
+```
+data/mind/train/behaviors.tsv
+data/mind/train/news.tsv
+data/mind/valid/behaviors.tsv
+data/mind/valid/news.tsv
+```
+
+#### Yelp
+
+Download the [Yelp Open Dataset](https://www.yelp.com/dataset) (`yelp_dataset.tar`) and extract the two JSON files:
+```
+data/yelp/yelp_academic_dataset_business.json
+data/yelp/yelp_academic_dataset_review.json
+```
+
+### 2. Build Processed Datasets
+
+Run the following scripts **from the project root**. Each script reads from `data/` and writes to `datasets/`:
+
+```bash
+python build_dataset/build_dataset_amazon.py
+python build_dataset/build_dataset_mind.py
+python build_dataset/build_dataset_yelp.py
+```
+
+After preprocessing, the directory layout should look like:
 
 ```
 datasets/
@@ -86,7 +120,9 @@ datasets/
     └── user_dict.pickle
 ```
 
----
+These paths are already set in the corresponding config files under `configs/`.
+
+
 
 ## Models
 
